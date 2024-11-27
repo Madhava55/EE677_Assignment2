@@ -1,0 +1,6 @@
+input a
+input b
+input c
+output d
+and a b e
+and e c d
