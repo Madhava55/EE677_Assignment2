@@ -1,7 +1,7 @@
 import numpy as np
 
 class LogicSimulator:
-    def _init_(self, circuit_file):
+    def __init__(self, circuit_file):
         """
         Initialize the circuit by parsing the input file.
         :param circuit_file: Path to the circuit description text file.
@@ -29,7 +29,7 @@ class LogicSimulator:
         
         # Create a graph of dependencies.
         for gate in gates:
-            for input_node in gate.get("inputs", []):
+            for input_node in (gate.get("inputs", [])):
                 # Look for the gate that produces the input node.
                 for dep_gate in gates:
                     if input_node == dep_gate["output"]:
@@ -46,7 +46,7 @@ class LogicSimulator:
             
             # Decrease the in-degree of dependent gates.
             for dep_gate in gates:
-                if gate["output"] in dep_gate.get("inputs", []):
+                if gate["output"] in (dep_gate.get("inputs", []) or dep_gate.get("input", [])):
                     in_degree[id(dep_gate)] -= 1
                     if in_degree[id(dep_gate)] == 0:
                         queue.append(dep_gate)
@@ -73,8 +73,8 @@ class LogicSimulator:
                     parts = line.split()
                     gate = {
                         "type": parts[0],
-                        "input": parts[1],
-                        "prev_input": parts[2],
+                        "inputs": parts[1],
+                        "prev_input": "X",
                         "output": parts[-1]
                     }
                     self.gates.append(gate)
@@ -101,10 +101,7 @@ class LogicSimulator:
 
     def simulate_gate(self, gate):
         """Simulate a single gate."""
-        if gate["type"] =="ff":
-            inputs = [self.nodes[node] for node in gate["input"]]
-        else:
-            inputs = [self.nodes[node] for node in gate["inputs"]]
+        inputs = [self.nodes[node] for node in gate["inputs"]]
         if "X" in inputs:  # If any input is unknown
             return "X"
 
@@ -122,7 +119,9 @@ class LogicSimulator:
         elif gate["type"] == "nor":
             return self.logic_not(self.logic_or(inputs))
         elif gate["type"] == "ff":
-            return self.logic_ff(inputs[0], gate["prev_input"])
+            temp = gate["prev_input"]
+            gate["prev_input"] = inputs[0]
+            return temp
         else:
             raise ValueError(f"Unknown gate type: {gate['type']}")
 
@@ -136,10 +135,6 @@ class LogicSimulator:
         if "D" in inputs:
             return "D"
         return "1"
-
-    def logic_ff(self, input, prev_input):
-        # Simulate the FF logic based on previous input
-        return prev_input
 
     def logic_or(self, inputs):
         if "1" in inputs:
@@ -273,7 +268,6 @@ def test_fault():
     
     print("Fault is not testable.")
     return False  
-
 stuck_node = input("Please enter the stuck-at-fault node")
 stuck_val = input("Please enter the type of fault , sa0 or sa1")
 output_node = input("Enter the output node")

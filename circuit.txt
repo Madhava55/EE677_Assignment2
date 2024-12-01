@@ -2,5 +2,6 @@ input a
 input b
 input c
 output d
-and a b e
-and e c d
+ff a f
+and f b e
+or e c d
